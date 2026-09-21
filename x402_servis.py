@@ -12,7 +12,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from mainnet_guard import require_mainnet_payment
 from pydantic import BaseModel, Field
 
 from sester import __version__ as SESTER_VERSION
@@ -25,6 +26,8 @@ from borsa_core import (
 )
 
 PRICE = float(os.environ.get("BORSA_PRICE", "0.01"))
+# mainnet: gerçek zincir USDC transferi zorunlu (sıfır-ödeme bypass kapanır)
+MAINNET_PAY_TO = os.environ.get("BORSA_MAINNET_PAY_TO", "")
 DAILY_QUOTA = float(os.environ.get("BORSA_DAILY_QUOTA", "5.00"))
 SELLER_SECRET = os.environ.get("BORSA_SELLER_SECRET", "borsa-demo-secret-v0")
 PAY_TO = os.environ.get("BORSA_PAY_TO", "sester:ajan-borsasi")
@@ -121,8 +124,14 @@ def teklif_ver(girdi: BidGirdisi) -> dict:
 
 
 @app.post("/eslestir/{bid_id}", response_model=dict)
-def eslestir(bid_id: str) -> dict:
-    """Teklifi ajanın fiyat-hedefiyle eşleştir."""
+def eslestir(bid_id: str, request: Request) -> dict:
+    """Teklifi ajanın fiyat-hedefiyle eşleştir.
+    GÜVENLİK: zincirde gerçek USDC transferi zorunlu (mainnet modu)."""
+    # mainnet ödeme doğrulama (test modunda atlanır)
+    require_mainnet_payment(
+        request, price=PRICE, pay_to=MAINNET_PAY_TO,
+        service_name="borsa",
+    )
     m = match_bid(bid_id, db=DB_PATH)
     if m is None:
         raise HTTPException(
