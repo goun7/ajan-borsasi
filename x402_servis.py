@@ -39,7 +39,7 @@ LEDGER_PATH = os.environ.get(
 )
 
 Path(LEDGER_PATH).parent.mkdir(parents=True, exist_ok=True)
-ledger = Ledger(LEDGER_PATH)
+ledger = Ledger(LEDGER_PATH, secret=SELLER_SECRET)
 
 app = FastAPI(
     title="Ajan Borsası ödemeli servis",
