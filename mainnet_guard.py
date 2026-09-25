@@ -32,6 +32,19 @@ import os
 from fastapi import HTTPException, Request
 
 
+def _valid_eoa(addr: str) -> bool:
+    """Ethereum EOA format kontrolu: "0x" + 40 hex.
+
+    EIP-55 checksum ZORUNLU DEGIL ( env degerleri checksum'suz olabilir);
+    burada yanlis-adres yakalanir: "0x123", "abc", "" -> False.
+    Imza/kontrol-zinciri dogrulamasi zincir tarafinda yapilir.
+    """
+    if not addr.startswith("0x"):
+        return False
+    body = addr[2:]
+    return len(body) == 40 and all(c in "0123456789abcdefABCDEF" for c in body)
+
+
 def resolve_treasury(service_name: str = "svc") -> str:
     """TEK-KASA: ödeme hedefi tek EOA'dan çözülür ( vergi optimizasyonu).
 
@@ -46,9 +59,19 @@ def resolve_treasury(service_name: str = "svc") -> str:
     """
     treasury = (os.environ.get("UNPUMP_TREASURY_EOA") or "").strip()
     if treasury:
+        if not _valid_eoa(treasury):
+            raise SystemExit(
+                "treasury-invalid: UNPUMP_TREASURY_EOA gecersiz EOA "
+                f"({treasury[:24]!r}) - '0x' + 40 hex bekleniyor; "
+                "yanlis-adrese odeme riski.")
         return treasury
     legacy = (os.environ.get(f"{service_name.upper()}_MAINNET_PAY_TO") or "").strip()
     if legacy:
+        if not _valid_eoa(legacy):
+            raise SystemExit(
+                "treasury-invalid: "
+                f"{service_name.upper()}_MAINNET_PAY_TO gecersiz EOA "
+                f"({legacy[:24]!r}) - '0x' + 40 hex bekleniyor.")
         return legacy
     raise SystemExit(
         "treasury-required: UNPUMP_TREASURY_EOA-ZORUNLU — tek-kasa kuralı "
