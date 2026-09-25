@@ -29,7 +29,14 @@ PRICE = float(os.environ.get("BORSA_PRICE", "0.01"))
 # mainnet: gerçek zincir USDC transferi zorunlu (sıfır-ödeme bypass kapanır)
 MAINNET_PAY_TO = resolve_treasury("borsa")  # tek-kasa: UNPUMP_TREASURY_EOA (fail-closed)
 DAILY_QUOTA = float(os.environ.get("BORSA_DAILY_QUOTA", "5.00"))
-SELLER_SECRET = os.environ.get("BORSA_SELLER_SECRET", "borsa-demo-secret-v0")
+# GUVENLIK: zayif default YOK — bos secret receipt HMAC zincirini
+# baska anahtarla yazar ( verify_chain False). fail-closed.
+_raw_secret = os.environ.get("BORSA_SELLER_SECRET", "")
+if not _raw_secret:
+    raise SystemExit(
+        "secret-required: BORSA_SELLER_SECRET-ZORUNLU — bos/zayif-secret "
+        "receipt HMAC zincirini baska anahtarla yazar.")
+SELLER_SECRET = _raw_secret
 PAY_TO = os.environ.get("BORSA_PAY_TO", "sester:ajan-borsasi")
 DB_PATH = os.environ.get(
     "BORSA_DB", str(Path.home() / ".workspace" / "ajan-borsasi" / "borsa.sqlite")
