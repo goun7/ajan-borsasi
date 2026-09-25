@@ -17,9 +17,13 @@ Kullanım (herhangi bir x402 servisinin ücretli endpoint'inde):
         # ... iş ...
 
 Çevre:
+  UNPUMP_TREASURY_EOA=0x... — TEK-KASA: tüm ödemeler tek EOA'ya
+    (25 Eyl vergi optimizasyonu: tek muhatap, tek mali müşavir).
+    Boşsa hiçbir servis BAŞLAYAMAZ — resolve_treasury() import-anında
+    SystemExit fırlatır (fail-closed: ödemesiz-hizmet-yanılgısı yok).
   <SVC>_MAINNET=1 (varsayılan) — zincirde transfer arar
   UNPUMP_TEST=1 — test modu, sim (zincir aramaz)
-  <SVC>_MAINNET_PAY_TO=0x... — ödeme alma cüzdanı
+  <SVC>_MAINNET_PAY_TO=0x... — ESKİ: geri-uyum için (treasury boşsa)
 """
 from __future__ import annotations
 
@@ -28,8 +32,48 @@ import os
 from fastapi import HTTPException, Request
 
 
+def resolve_treasury(service_name: str = "svc") -> str:
+    """TEK-KASA: ödeme hedefi tek EOA'dan çözülür ( vergi optimizasyonu).
+
+    Öncelik: UNPUMP_TREASURY_EOA (tek kaynak) → <SVC>_MAINNET_PAY_TO
+    (geri-uyum). İkisi de boşsa **SystemExit** — servis ödeme-hedefisiz
+    BAŞLAYAMAZ (fail-closed: "MAINNET_PAY_TO ayarlanmamış" değil,
+    "treasury-EOA-ZORUNLU" — ödemenin yanlış-adrese gitme riski sıfır).
+
+    Bu fonksiyon x402_servis.py'lerin MODÜL-BAŞINDA çağrılır; import-anında
+    patlar → uvicorn başlamaz → systemd Restart=always döngüsü bile
+    ödeme-hedefisiz servis kurmaz ( rc≠0).
+    """
+    treasury = (os.environ.get("UNPUMP_TREASURY_EOA") or "").strip()
+    if treasury:
+        return treasury
+    legacy = (os.environ.get(f"{service_name.upper()}_MAINNET_PAY_TO") or "").strip()
+    if legacy:
+        return legacy
+    raise SystemExit(
+        "treasury-required: UNPUMP_TREASURY_EOA-ZORUNLU — tek-kasa kuralı "
+        "gereği ödeme-hedefi-boş servis başlayamaz; env'i ayarlayın "
+        f"( veya geri-uyum {service_name.upper()}_MAINNET_PAY_TO).")
+
+
 def _truthy(name: str, default: str = "1") -> bool:
     return os.environ.get(name, default) not in ("0", "", "false")
+
+
+def _sandbox_keys() -> set[str]:
+    """Whitelist'lenmiş test agent adresleri (UNPUMP_SANDBOX_KEYS, virgülle).
+
+    Bu anahtarlar zincir ödemesi olmadan çağrı yapabilir — demo/test için.
+    Yine de Sester middleware'ın günlük kotasına (örn. $5) tabidir, yani
+    sızdırılsalar bile sınırsız kullanım yok.
+    """
+    raw = os.environ.get("UNPUMP_SANDBOX_KEYS", "")
+    return {k.strip().lower() for k in raw.split(",") if k.strip()}
+
+
+def is_sandbox_payer(payer: str) -> bool:
+    """Adres sandbox whitelist'inde mi (analytics ve receipt işareti için)."""
+    return _truthy("UNPUMP_SANDBOX", "1") and payer.lower() in _sandbox_keys()
 
 
 def require_mainnet_payment(
@@ -44,6 +88,10 @@ def require_mainnet_payment(
 
     Döndürür: payer adresi (doğrulandı) veya test modunda None.
     Hata: 402 (ödeme yok / eksik), 500 (yapılandırma), 503 (RPC).
+
+    Sandbox: UNPUMP_SANDBOX_KEYS'teki adresler zincir aramasından muaf
+    tutulur (demo/test). request.state.sandbox=True işaretlenir; analytics
+    bunu gerçek gelirden ayırt etmek için kullanır. Kota hala geçerli.
     """
     svc = test_mode_var or f"{service_name.upper()}_MAINNET"
     test = _truthy("UNPUMP_TEST", "0")
@@ -67,6 +115,14 @@ def require_mainnet_payment(
                 "contract": "USDC (Base mainnet)",
             },
         )
+
+    # --- sandbox: whitelist'li test anahtarı → zincir aramasını atla ---
+    if is_sandbox_payer(payer):
+        try:
+            request.state.sandbox = True
+        except Exception:
+            pass  # request.state her zaman mevcut olmayabilir
+        return payer
 
     try:
         import mainnet_verify as mv

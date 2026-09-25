@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from mainnet_guard import require_mainnet_payment
+from mainnet_guard import require_mainnet_payment, resolve_treasury
 from pydantic import BaseModel, Field
 
 from sester import __version__ as SESTER_VERSION
@@ -27,7 +27,7 @@ from borsa_core import (
 
 PRICE = float(os.environ.get("BORSA_PRICE", "0.01"))
 # mainnet: gerçek zincir USDC transferi zorunlu (sıfır-ödeme bypass kapanır)
-MAINNET_PAY_TO = os.environ.get("BORSA_MAINNET_PAY_TO", "")
+MAINNET_PAY_TO = resolve_treasury("borsa")  # tek-kasa: UNPUMP_TREASURY_EOA (fail-closed)
 DAILY_QUOTA = float(os.environ.get("BORSA_DAILY_QUOTA", "5.00"))
 SELLER_SECRET = os.environ.get("BORSA_SELLER_SECRET", "borsa-demo-secret-v0")
 PAY_TO = os.environ.get("BORSA_PAY_TO", "sester:ajan-borsasi")
