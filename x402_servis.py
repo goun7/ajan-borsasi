@@ -66,6 +66,7 @@ app.add_middleware(
     exempt_prefixes=(
         "/healthz", "/ozet", "/pazar", "/docs", "/openapi.json", "/redoc",
         "/favicon.ico", "/listele", "/teklif-ver", "/eslestir",
+        "/cesitlilik",
     ),
 )
 
