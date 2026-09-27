@@ -93,6 +93,12 @@ class TamamlamaGirdisi(BaseModel):
     receipt_hash: str = Field(..., description="ChargeReceipt hash — zorunlu")
 
 
+class CesitlilikGirdisi(BaseModel):
+    """arXiv:2609.29701: ajan tercih-dagilimlari ( olasilik vektoru)."""
+    ajan_dagilimlari: list[list[float]] = Field(
+        ..., description="her ajanin tercih-dagilimi ( >=2 ajan, >=2 tercih)")
+
+
 # ---------------------------------------------------------------- uçlar
 
 
@@ -171,6 +177,91 @@ def tamamla(girdi: TamamlamaGirdisi) -> dict:
 def pazar() -> dict:
     """Ücretsiz: borsa güven tablosu."""
     return market_summary(db=DB_PATH)
+
+
+@app.post("/cesitlilik")
+def cesitlilik(request: Request, girdi: CesitlilikGirdisi) -> dict:
+    """Ajan oy-çeşitliliği analizi ( ucretli: $PRICE).
+
+    ARASTIRMA: arXiv:2609.29701 ( Huang et al., 2026) 'Multi-Agent Debate
+    for Explainable Trading' — ajanlarin 'sycophantic convergence'
+    basari-disi-modunu Jensen-Shannon divergence ile OLCTEK;
+    anlasmazligi korumak Sharpe +0.14 ( p=0.028) artirdi.
+
+    Girdi: her ajanin tercih-dagilimi ( olasilik vektoru).
+    Cikti: ortalama ikili JSD + ceşitlilik karari.
+    """
+    require_mainnet_payment(
+        request, price=PRICE, pay_to=MAINNET_PAY_TO,
+        service_name="borsa",
+    )
+    daglar = girdi.ajan_dagilimlari
+    if len(daglar) < 2:
+        raise HTTPException(status_code=400, detail="en az 2 ajan gerekli")
+    if len(daglar) > 50:
+        raise HTTPException(status_code=400, detail="en fazla 50 ajan")
+    boyut = len(daglar[0])
+    if boyut < 2:
+        raise HTTPException(status_code=400, detail="en az 2 tercih")
+    for d in daglar:
+        if len(d) != boyut:
+            raise HTTPException(status_code=400,
+                                detail="tüm dağılımlar aynı boyutta olmalı")
+        if not all(v >= 0 for v in d):
+            raise HTTPException(status_code=400, detail="negatif olasılık")
+
+    import math
+
+    def _jsd(p, q):
+        p = [max(v, 0.0) for v in p]
+        q = [max(v, 0.0) for v in q]
+        sp, sq = sum(p), sum(q)
+        if sp <= 0 or sq <= 0:
+            return 1.0
+        p = [v / sp for v in p]
+        q = [v / sq for v in q]
+        m = [(a + b) / 2.0 for a, b in zip(p, q)]
+
+        def _kl(x, y):
+            return sum(xi * math.log2(xi / yi) for xi, yi in zip(x, y)
+                       if xi > 0 and yi > 0) or 0.0
+        return 0.5 * _kl(p, m) + 0.5 * _kl(q, m)
+
+    ikili = []
+    for i in range(len(daglar)):
+        for j in range(i + 1, len(daglar)):
+            ikili.append(_jsd(daglar[i], daglar[j]))
+    ortalama = sum(ikili) / len(ikili)
+    # JSD [0,1]; 0 = TAM AYNI ( sycophantic convergence), ln(2)~0.693 = tam
+    # farkli; 0.1+ makul cesitlilik
+    if ortalama < 0.02:
+        karar = "SYCOPHANTIC-CONVERGENCE"
+        aciklama = ("ajanlar_bagimsiz-pozisyonlarini_birakmis — arXiv:2609.29701"
+                    " basari-disi-modu; anlasmazligi korumak Sharpe +0.14")
+    elif ortalama < 0.10:
+        karar = "DUSUK-CECESITLILIK"
+        aciklama = "ajanlar birbirine benziyor; daha fazla bagimsiz gorus"
+    else:
+        karar = "SAGLIKLI-CECESITLILIK"
+        aciklama = "ajanlar bagimsiz dusunuyor — karar kalitesi yuksek"
+
+    sonuc = {
+        "ajan_sayisi": len(daglar),
+        "tercih_sayisi": boyut,
+        "ortalama_jsd": round(ortalama, 6),
+        "min_jsd": round(min(ikili), 6),
+        "max_jsd": round(max(ikili), 6),
+        "karar": karar,
+        "aciklama": aciklama,
+        "kaynak": "arXiv:2609.29701 ( Huang et al., 2026)",
+        "paid": PRICE,
+    }
+    seq = ledger.append("charge_receipt", "buyer", "/cesitlilik", PRICE,
+                        payload=sonuc)
+    out = dict(sonuc)
+    out["ledger_seq"] = seq.get("seq", -1) if isinstance(seq, dict) else -1
+    out["receipt_chain_valid"] = ledger.verify_chain()
+    return out
 
 
 @app.get("/ozet")
