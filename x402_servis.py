@@ -317,6 +317,35 @@ def ozet() -> dict:
                           "GERCEK faz-gecis-tespiti YAPILMAZ ( bu bir "
                           "prediction-market-cesitlilik ciktisidir)"),
         },
+        # arXiv:2609.31379 — MEV/sandwich sizdirma-esikleri
+        "sandwich_mev_riski": {
+            "kaynak": ("arXiv:2609.31379 ( Lin, Li, Lai; NeurIPS 2026; "
+                       "25 Eyl 2026) — 'How Much Must a Private Mempool "
+                       "Hide? Exact Leakage Thresholds for Sandwich "
+                       "Attacks'"),
+            "bulgu": ("'Private and encrypted mempools hide pending "
+                      "transactions to stop sandwich attacks and other "
+                      "forms of maximal extractable value ( MEV), but "
+                      "what they hide is rarely everything: a "
+                      "transaction's pair, direction, and a coarse range "
+                      "for its size can still leak'"),
+            "unpump-mitigasyonu": {
+                "tasarim": "Nakit-Akisli AMM ( TWAMM)",
+                "koruma": ("odemeler ZAMANLA dagilir; tek-shot "
+                           "front-run'in kârliligi DUSUKTUR "
+                           "( zamanla-dagilmis akislar)"),
+                "test_kaniti": ("test_twamm_buyback.py + "
+                                "test_uçtan_uca_buyback.py: TWAMM "
+                                "buyback davranisi dogrulandi"),
+            },
+            "kalan_risk": ("sandwich hala MUMKUN; sizdirma-esikleri "
+                           "( Lin et al.) hala gecerli: pair/direction/"
+                           "size-araligi sizabilirse saldirgan "
+                           "kârlı-olabilir"),
+            "oneri": ("ileride bir mempool/private-pool eklenerse "
+                      "Lin et al.'in kesin-esik analizine gore "
+                      "gizlilik-parametresi secilmelidir"),
+        },
     }
 
 
