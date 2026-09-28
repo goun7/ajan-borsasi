@@ -274,6 +274,25 @@ def ozet() -> dict:
         "per_agent": per_agent,
         "market": market_summary(db=DB_PATH),
         "thesis": "iş-kanıtlı ajan borsası — kanıtsız listeleme/tamamlama yok",
+        # arXiv:2609.31422 — uydurulmus konsensus riski
+        "uydurulmus_konsensus_uyarisi": {
+            "kaynak": ("arXiv:2609.31422 ( Maslowski & Chudziak; "
+                       "ICTAI 2026; 25 Eyl 2026)"),
+            "bulgu": ("MAD ( multi-agent debate) sistemlerinde son "
+                      "sentez-asamasi yetersiz denetlenir; 'summarizing "
+                      "models are prone to fabricating smoothly written "
+                      "debate consensus that is not grounded in the "
+                      "debate's history'"),
+            "cozum": ("Active Provenance Gate — sentez-sonrasi AKTIF "
+                      "dogrulama; ciktilarin gecmiste-trace edilebilmesi"),
+            "unpump-sonucu": ("bu borsa LLM-sentezi KULLANMAZ "
+                              "( pure-compute JSD, arXiv:2609.29701); "
+                              "bu yuzden 'fabricated consensus' riski "
+                              "YOKTUR — ciktilar DETERMINISTIKTIR"),
+            "not": ("ileride LLM-temelli sentez eklenirse Active "
+                    "Provenance Gate sarttir ( cikti HMAC-receipt'lerine "
+                    "trace-edilmelidir)"),
+        },
     }
 
 
