@@ -293,6 +293,30 @@ def ozet() -> dict:
                     "Provenance Gate sarttir ( cikti HMAC-receipt'lerine "
                     "trace-edilmelidir)"),
         },
+        # arXiv:2609.31260 — faz-gecis esikleri ( agent-sayisi/derinlik)
+        "faz_gecis_esikleri": {
+            "kaynak": ("arXiv:2609.31260 ( Rosenzweig; 25 Eyl 2026) — "
+                       "'distinct phase boundaries separating orderly "
+                       "price discovery from hyper-volatile cascade "
+                       "states, governed by critical thresholds in the "
+                       "number of agents and observable market depth'"),
+            "unpump-uygulamasi": {
+                "agent_sayisi_siniri": "2-50 ( /cesitlilik)",
+                "min_agent": 2,
+                "max_agent": 50,
+                "izlenen_metrik": "ortalama-JSD ( cesitlilik)",
+                "kaskad-riski_isareti": ("ortalama_jsd < 0.02 => "
+                                         "SYCOPHANTIC-CONVERGENCE "
+                                         "( arXiv:2609.29701)"),
+                "derinlik": ("AMM likidite-derinligi; agent-sayisi "
+                             "esigi gecilirse 'hyper-volatile cascade' "
+                             "riski ( Rosenzweig)"),
+            },
+            "durustluk": ("bu servis bir LOB DEGILDIR; faz-gecis "
+                          "esikleri BILGISEL-uyari olarak sunulur, "
+                          "GERCEK faz-gecis-tespiti YAPILMAZ ( bu bir "
+                          "prediction-market-cesitlilik ciktisidir)"),
+        },
     }
 
 
