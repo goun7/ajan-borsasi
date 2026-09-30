@@ -139,6 +139,31 @@ def require_mainnet_payment(
             },
         )
 
+    # GUVENLIK (LEAD T9 fix): x-payer-address header'ini SAHİPLENME
+    # saldırısına karşı imzadan çıkan agent ile eşleştir.
+    # SesterMiddleware X-Payment'ı doğrular ama sonucu scope'a yazmaz;
+    # bu yüzden guard kendi doğrulamasını yapar.
+    odeme_header = request.headers.get("x-payment", "")
+    if odeme_header:
+        try:
+            from sester.schemes import verify_exact_sester
+            kaynak = request.url.path
+            bilgi = verify_exact_sester(odeme_header, kaynak)
+            imza_agent = bilgi["agent"].lower()
+            if imza_agent != payer.lower():
+                raise HTTPException(
+                    status_code=402,
+                    detail={
+                        "error": "payer_mismatch",
+                        "hint": "X-Payer-Address, X-Payment imzasından çıkmıyor",
+                    },
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            # imza doğrulanamıyorsa fail-closed: ödeme kanıtı yok
+            pass
+
     # --- sandbox: whitelist'li test anahtarı → zincir aramasını atla ---
     if is_sandbox_payer(payer):
         try:
