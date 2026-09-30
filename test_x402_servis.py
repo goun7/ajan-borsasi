@@ -27,7 +27,12 @@ def client(tmp_path: Path) -> TestClient:
 
     db = tmp_path / "borsa.sqlite"
     ldb = tmp_path / "receipts.sqlite"
-    new_ledger = x402_servis.Ledger(str(ldb))
+    # AT-193: sester 0.7.x Ledger icin secret ZORUNLU kilar —
+    # tests-only sabit secret (gercek uretim secret'i DEGIL).
+    import os
+    os.environ["BORSA_SELLER_SECRET"] = "test-only-secret-32bytes-min-len"
+    os.environ["UNPUMP_TREASURY_EOA"] = "0x" + "ab" * 20
+    new_ledger = x402_servis.Ledger(str(ldb), secret=os.environ["BORSA_SELLER_SECRET"])
     x402_servis.DB_PATH = str(db)
     x402_servis.LEDGER_PATH = str(ldb)
     x402_servis.ledger = new_ledger
