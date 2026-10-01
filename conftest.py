@@ -8,7 +8,31 @@ Ayrica mainnet_verify.find_transfer gercek RPC (base.publicnode.com) arar —
 testler cevrimdisi olmali. Bu yuzden basarili bir TransferFound stub'u.
 """
 import os
+import sys
 
+# --- 2026-09-30: yorumlayici tuzagi ------------------------------------------
+# `sester` bir KARDES PROJE (01_unicorn/63-Sester) ve sanal ortamda kuruludur.
+# Sistem Python ile kosuldugunda 287 test "No module named sester" ile hata
+# verir ve proje BOZUK gorunur — oysa dogru komutla 13/13 gecer. 287 hata,
+# TEK bir yorumlayici secimi hatasi.
+#
+# Iki hatanin da onune gecilir:
+#  (a) 287 belirsiz hata yerine TEK bir acik sebep.
+#  (b) hicbir kosuyu bloklamaz. Ilk denemede SystemExit(3) koydum ve OLCETIM:
+#      `pytest tests/` (sester gerektirmeyen kisim) ONCEDEN 6 passing idi,
+#      bloklayinca hic kosmuyordu — yani kendi getirdigim regresyon.
+#      Geri alindi. Dogru davranis: sester bagli modul ATLANIR ve sebebi
+#      yazilir; sester gerektirmeyen testler oldugu gibi kosar.
+try:
+    import sester  # noqa: F401
+    _SESTER_VAR = True
+except ImportError:  # pragma: no cover
+    _SESTER_VAR = False
+    # x402 odeme testleri bu modulde; sester yoksa kosulamazlar.
+    # NOT: `collect_ignore` ve `pytest_ignore_collect` DENENDI ve ISE YARAMADI:
+    # komut satirinda acikca verilen dosyada pytest bu kancalari ATLAR
+    # (Session._collectfile). Etkisiz koruma kodunu birakmamak icin kaldirildi;
+    # dogru yer modulun kendisi: test_x402_servis.py icinde importorskip.
 os.environ.setdefault("BORSA_SELLER_SECRET", "test-only-secret-32bytes-min-len")
 os.environ.setdefault("UNPUMP_TREASURY_EOA", "0x" + "ab" * 20)
 # UNPUMP_TEST=1 odeme-kapisini test-moduna alir (gercek zincir aramaz).
