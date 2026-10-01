@@ -3,3 +3,9 @@ __pycache__/
 .venv/
 *.sqlite
 .env
+
+# Ozyinelemeli WIP yer tutucusu (README 58. satir): kendine isaret eder ve
+# pytest ayni testleri yuzlerce kez toplar. Yerel dosya sistemi artefakti,
+# repoya KAYDEDILMEZ (2026-09-30 duzeltmesi: `git add -A` ile yanlisislikla
+# girdi, geri alindi).
+24-ajan-borsasi

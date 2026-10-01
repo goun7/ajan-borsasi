@@ -55,9 +55,17 @@ cüzdan, anahtar veya `UNPUMP_TEST` env'i olmadan çalışır. `test_x402_servis
 ödeme testleridir; `.venv` (Sester ≥0.7) ve import-anı env ister — bunları `conftest.py` sağlar
 (gerçek üretim secret'ı DEĞİL) ve `UNPUMP_TEST=1` gerektirir; yoksa 402/`SystemExit` verir.
 
-`24-ajan-borsasi/` altındaki yüzlerce test ayrı bir **WIP** alt-dizindir (dokunmayın); toplu
-`pytest` onları da toplar ve özyinelemeli symlink yüzünden 246 passed / 287 error gibi yanıltıcı
-bir tablo üretir — kök testlerini yukarıdaki gibi ayrı çalıştırın.
+`24-ajan-borsasi/` ayrı bir **WIP** alt-dizindir (dokunmayın). Bugün bu yol bir
+**kendine işaret eden symlink** ve içi boş (git geçmişinde de hiç dosya yok).
+pytest symlink'i izlediği için aynı kök testlerini onlarca kez topluyor ve tam koşu
+**gerçekte 13 olan yerde `533 passed`** gösteriyor — yani varsayılan komut yanlış
+sayı bildiriyor.
+
+- Kök testleri (gerçek kapsam, 13 test): yukarıdaki komutla çalıştırın.
+- WIP alt dizini gerçek içerik kazandığında: symlink yerine **gerçek dizin**
+  kullanılmalı; o zaman tam `pytest` toplamı doğruyu göstermeye devam eder.
+- Sester sanal ortam dışında kurulu değilse `test_x402_servis.py` **atlanır**
+  (287 belirsiz hata yerine 1 atlanan modül) ve sebebi yazılır.
 
 ## Dürüst Durum
 
