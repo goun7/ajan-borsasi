@@ -86,3 +86,70 @@ sayı bildiriyor.
 
 **Lisans belirtilmemiştir** (LICENSE dosyası yok). Durum: Faz-0 prototip, aktif geliştirme —
 kullanıcı yok, ana ağda token yok, `24-ajan-borsasi/` WIP'tir (bu README onu kapsamaz).
+
+## Akademik Kaynaklar (2024-2026)
+
+Bu çalışma aşağıdaki araştırmaya dayanır (her referans canlı
+doğrulanmıştır):
+
+- **[1] Ödeme-Protokolü Formal Analizi** —
+  *A Formal Analysis of Agent Payment Protocols* — Jiang et al., arXiv 2026.
+  x402, MPP, ACP ve AP2 protokollerini Tamarin model-denetleyicisinde formalize eder;
+  delege yetki, kimlik-bilgisi kullanımı ve ifa aşamalarındaki güvenlik bağımlılıklarını
+  sistematik kanıtlar. Projenin `ChargeReceipt` HMAC hash-zinciriyle ödemeyi iş-kanıtına
+  bağlamasının teorik zemini.
+  [arXiv:2609.00060](https://arxiv.org/abs/2609.00060)
+
+- **[2] x402 Alıcı-Tarafı Karar Katmanı** —
+  *402Pilot: An x402 Decision Layer for Autonomous Agent Micropayments* — Li et al., arXiv 2026.
+  Sınırlı cüzdan bütçesi altında otonom bir alıcı-ajanın hangi ödemeli hizmeti satın alacağını
+  (contextual provider selection) ödüllü-amaçlı Thompson örneklemesiyle çözer. Projenin
+  alıcı-ajan teklif ve fiyat-hedefi eşleştirmesinin buyer-side karşılığı.
+  [arXiv:2608.01341](https://arxiv.org/abs/2608.01341)
+
+- **[3] Çok-Ajanlı Pazarda Ekonomik Hizalanma** —
+  *Agent Bazaar: Enabling Economic Alignment in Multi-Agent Marketplaces* — Karten et al., arXiv 2026.
+  LLM ajanların pazarlarda toplu davranışının dalgalanmayı nasıl amplifiye ettiğini (B2C
+  "Crash") ve Sybil aldatmasını (C2C "Lemon Market") simülasyonla gösterir. Projenin
+  "pazar etkin olarak çökmüş / hacimsiz" dürüst itirafının daha geniş sistemik riskten
+  kaynaklandığına işaret eder.
+  [arXiv:2605.17698](https://arxiv.org/abs/2605.17698)
+
+- **[4] x402 Sınır-Ötesi Güvenlik Riskleri** —
+  *When HTTP 402 Meets the Blockchain: Risks on Emerging x402 Payments* — Wang et al., arXiv 2026.
+  x402'nin ödeme kanıtı doğrulamasını ve zincir-üstü yerleşimi üçüncü-parti facilitator'lara
+  delege etmesinin merkezileştirme riskini ilk sistematik çalışmadır. Projenin `borsa_core.py`'yi
+  Sester'dan loose-coupled tutmasının (tek facilitator hatasının tüm pazarı bozmaması)
+  gerekçesi.
+  [arXiv:2607.19545](https://arxiv.org/abs/2607.19545)
+
+- **[5] Doğrulama-Doğal Takas (Clearing) İlkesi** —
+  *RAILS: Verification-Native Clearing For Agentic Commerce* — de Valois-Franklin & Bogdan, arXiv 2026.
+  "Ödeme takas değildir; LLM-as-judge takas değildir" tezini ileri sürüp ajan ticaretinde
+  bağımsız doğrulama (clearing) primitive'inin eksikliğini gösterir. Projenin "sadece sonuç
+  ödenmelidir" ilkesinin ve bağımsız yeniden-hesaplanabilir kanıt tasarımının dayanağı.
+  [arXiv:2606.08790](https://arxiv.org/abs/2606.08790)
+
+- **[6] ERC-8004 Güven Katmanı** —
+  *Can Trustless Agents Be Trusted? An Empirical Study of the ERC-8004 Decentralized AI Agent Ecosystem* —
+  Xiong et al., arXiv 2026.
+  Kimlik, İtibar ve Doğrulama için üç zincir-üstü kayıt barındıran ERC-8004'ün Ethereum, BSC ve
+  Base üzerindeki ilk ampirik incelemesi. README'nin Faz 1 planındaki **ERC-8004 kimlik**
+  bileşeninin bilimsel karşılığı.
+  [arXiv:2606.26028](https://arxiv.org/abs/2606.26028)
+
+- **[7] x402 Benimseme Ölçümü (işlem-sayısı yanılgısı)** —
+  *How Agentic Is Agentic Commerce? A Population-Scale Measurement of x402 Adoption and Authenticity* —
+  Ling et al., arXiv 2026.
+  Base üzerindeki popülasyon-ölçeği ölçümle, yüz milyonlarca x402 yerleşiminin benimseme kanıtı
+  olarak okunamayacağını (facilitator gas'ı sponsor ettiği için işlem sayısı neredeyse bedavaya
+  üretilebilir) gösterir. Projenin "409 eşleşmiş teklif, 408 tamamlanmış iş ama toplam
+  hacim $4.12" itirafının doğruladığı yanılgı.
+  [arXiv:2607.12575](https://arxiv.org/abs/2607.12575)
+
+- **[8] x402 Sistemsel Güvenlik Analizi** —
+  *Free-Riding the Agentic Web: A Systematic Security Analysis of x402 Payments* — Ling et al., arXiv 2026.
+  Senkron HTTP isteklerini asenkron blokzincir finalitesiyle bağlamanın yarattığı
+  durum-senkronizasyonu sorunlarını beş değişmez etrafında inceler. Projenin `mainnet_guard.py`
+  fail-closed zincir-ödeme tasarımının (zincir onayı gelmeden ödeme kapanmaması) temeli.
+  [arXiv:2605.30998](https://arxiv.org/abs/2605.30998)
