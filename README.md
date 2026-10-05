@@ -53,6 +53,47 @@ paylaşır — yani bir Unpump ticareti, doğrulanabilir bir kanıt olarak
 Tamga denetim hattına girebilir. Ayrıca **Delilix** ve **Tenderix** aynı
 ajan-teklif/kanıt desenini kullanır.
 
+## Akademik zemin
+
+Unpump'un üç katmanı — kanıt-çekirdeği (`kanit_cekirdegi.py`), ödeme hattı
+(`x402_servis.py` + Sester) ve ajan pazarı (`borsa_core.py`) — literatürde
+kurulan desenlere dayanır (her referans canlı doğrulanmıştır):
+
+- **Agent Flight Recorder** (arXiv:2609.01931, Bindschaedler/Botha/
+  Siebenbrunner, cs.CR, Eylül 2026, BCCA 2026) — ajan eylemlerini "structured,
+  canonically serialized event" olarak yakalar; **hash chaining ve Merkle
+  batching** ile tamper kanıtı üretir. Edit/delete/reorder/fork saldırılarını
+  %100, sıfır false-positive ile tespit eder; epoch köklerini zincire
+  anchoring yaparak önceden anlaşılan güvenilir-arabulucu olmadan bağımsız
+  doğrulamaya izin verir. `kanit_cekirdegi.py`'nin birebir akrabası: kanonik
+  serileştirme + SHA-256 hash-zinciri + `zinciri_dogrula`'nın store'a
+  bağımlı olmayan bağımsız yeniden-hesaplaması aynı desendir. Aradaki
+  fark: AFR Merkle batching + on-chain anchoring kullanır; Unpump'un lineer
+  zinciri Sester makbuzlarının HMAC-zinciriyle kapanır (Merkle/anchoring
+  Faz-1 için bir genişletme yönüdür).
+- **Sovereign-by-Design** (arXiv:2602.05486, Esposito/Marchesi/Tonelli/
+  Lenarduzzi, cs.SE, Şubat 2026) — dijital egemenliği birinci-sınıf mimari
+  kalite olarak ele alan referans mimarisi; **"blockchain-based trust and
+  auditability"**, self-sovereign kimlik ve veri yönetişimini birleştirir.
+  Unpump'un ödeme/denetim hattının zemin mimarisi: güvenin tek bir
+  facilitator'a emanet edilmeyip zincir-üstü denetlenebilir olması
+  (`mainnet_guard.py`'nin fail-closed zincir-ödemesi, tek-kasa treasury).
+  Aradaki fark: referans mimari tamken Unpump Faz-0'da yalnız trust +
+  auditability yönünü kullanır; SSI/ERC-8004 kimlik katmanı Faz 1'dir.
+- **CHRONOS** (arXiv:2605.23887, Chandra, cs.DB, Mayıs 2026) — evrimleşen
+  **veri pazarları** için üç katmanlı mimari: temporal indeksleme,
+  changepoint-koşullu **Shapley değerlemesi** ve EXP3-IX ile **DP bütçesi**
+  altında çok-ajan koordinasyonu. `borsa_core.py`'nin pazar katmanının zemin
+  deseni: paylaşılan bir pazarda çok-ajan koordinasyonu ve değer-transferi.
+  Aradaki fark (dürüst): CHRONOS bir *veri* pazarıdır (Shapley fiyatlandırma
+  + DP bütçesi); Unpump Faz-0'da naif fiyat-hedefi eşleştirmesi kullanır —
+  Shapley/DP katmanı mevcut koda girmez, Faz-1 değerlendirme hattı için
+  bir genişletme yönüdür.
+
+Daha geniş kaynak listesi (ödeme-protokolü formal analizi, x402 güvenliği,
+ERC-8004 ekosistemi, benimseme ölçümü) için aşağıdaki "Akademik Kaynaklar"
+bölümüne bakın.
+
 ## Test Durumu (gerçek)
 
 ```bash
