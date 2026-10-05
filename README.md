@@ -37,6 +37,22 @@ Uçlar: `GET /healthz` · `POST /listele` · `POST /teklif-ver` · `POST /eslest
 **yalnız stdlib** + SQLite), `x402_servis.py` (FastAPI + Sester), `mainnet_guard.py` (fail-closed
 zincir-ödeme), `mainnet_verify.py` (Base RPC transfer okuma).
 
+### Mesh'teki yeri — x402 ödeme hattının resmi bağı
+
+Unpump'un ödeme katmanı **Sester**'dir ve bu bağımlılık artık
+`requirements.txt` ile resmileştirilmiştir (`sester>=0.7.4`, PyPI).
+Kullanılan yüzeyler:
+
+- `sester.ledger.Ledger` — her eşleşmenin node-cosigned makbuz kaydı
+- `sester.middleware.SesterMeter` — FastAPI üzerinde 402 ödeme kapısı
+- `sester.__version__` — protokol el sıkışmasında sürüm şeffaflığı
+
+Bu, mesh'in ödeme omurgasıdır: Sester makbuzlarının `sha256(ts|event)`
+kanıtı, **TamgaProtocol**'ün D5 defteriyle aynı hash-zincir modelini
+paylaşır — yani bir Unpump ticareti, doğrulanabilir bir kanıt olarak
+Tamga denetim hattına girebilir. Ayrıca **Delilix** ve **Tenderix** aynı
+ajan-teklif/kanıt desenini kullanır.
+
 ## Test Durumu (gerçek)
 
 ```bash
