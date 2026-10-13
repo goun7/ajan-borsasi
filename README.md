@@ -47,6 +47,76 @@ Kullanılan yüzeyler:
 - `sester.middleware.SesterMeter` — FastAPI üzerinde 402 ödeme kapısı
 - `sester.__version__` — protokol el sıkışmasında sürüm şeffaflığı
 
+## Deploy ( systemd + venv )
+
+```bash
+# 1) servis-kullanıcısı + dizin
+sudo useradd -m -d /opt/ajan-borsasi ajanborsa
+sudo -u ajanborsa git clone <repo-adresi> /opt/ajan-borsasi/app
+
+# 2) venv + bağımlılıklar ( root-pip DEĞİL — PEP-668 koruması )
+sudo -u ajanborsa bash -lc 'cd /opt/ajan-borsasi/app && \
+  python3 -m venv .venv && .venv/bin/pip install -r requirements.txt'
+
+# 3) çevre ( /opt/ajan-borsasi/app.env )
+cat >/opt/ajan-borsasi/app.env <<'EOF'
+UNPUMP_TREASURY_EOA=0x<40-hex>
+BORSA_SELLER_SECRET=<openssl rand -hex 32>
+BORSA_PRICE=0.01
+BORSA_DAILY_QUOTA=5.00
+EOF
+
+# 4) systemd-birimi
+cat >/etc/systemd/system/ajan-borsasi.service <<'EOF'
+[Unit]
+Description=ajan-borsasi x402 servisi
+After=network.target
+[Service]
+User=ajanborsa
+WorkingDirectory=/opt/ajan-borsasi/app
+EnvironmentFile=/opt/ajan-borsasi/app.env
+ExecStart=/opt/ajan-borsasi/app/.venv/bin/uvicorn x402_servis:app --port 8000
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl enable --now ajan-borsasi
+curl -fsS localhost:8000/healthz
+```
+
+**Canlılık-kontrolü:** `GET /healthz` 200 döner. **Ödeme-kontrolü:** ücretsiz
+uçlar ( `/ozet`, `/pazar`) her zaman 200; ücretli uçlar ödeme-başarısızsa 402.
+
+**Dürüst-sınır:** bu yapılandırma **gerçek-mainnet'te çalıştırılmadı** —
+0 müşteri, 0 canlı-işlem. `UNPUMP_TEST=1` olmadan koşulursa
+`mainnet_guard.py` zincirde transfer arar; bulamazsa 402 verir ( fail-closed).
+
+## CLI ( günlük-operasyon )
+
+```bash
+# canlı sağlık
+curl -fsS localhost:8000/healthz
+
+# pazar-özeti ( ücretsiz uç )
+curl -fsS localhost:8000/ozet | python3 -m json.tool
+
+# zincir-ödeme-doğrulama ( mainnet-transfer-ara )
+python3 mainnet_verify.py
+
+# tam test-suiti
+python3 -m pytest tests/ -q    # 861 passed rc=0 ( sester sys.path otomatik)
+```
+
+**Kanal listesi ( hepsi çalışır):**
+
+| Eser | Komut | Durum |
+|---|---|---|
+| Servis | `uvicorn x402_servis:app` | ✅ 31 rota |
+| Test | `python3 -m pytest tests/` | ✅ 861 rc=0 |
+| Zincir-doğrulama | `python3 mainnet_verify.py` | ✅ PYTHONPATH gerekli |
+| Canlılık | `curl /healthz` | ✅ 200 |
+
+
 Bu, mesh'in ödeme omurgasıdır: Sester makbuzlarının `sha256(ts|event)`
 kanıtı, **TamgaProtocol**'ün D5 defteriyle aynı hash-zincir modelini
 paylaşır — yani bir Unpump ticareti, doğrulanabilir bir kanıt olarak
@@ -97,32 +167,29 @@ bölümüne bakın.
 ## Test Durumu (gerçek)
 
 ```bash
-# 1) Çekirdek — saf iş-mantığı, izole tmp SQLite; sistem python3 ile bile çalışır
-python3 -m pytest tests/ -p no:cacheprovider --tb=short -q
-# → 6 passed
-
-# 2) Uçtan-uca ödeme testleri — .venv + import-öncesi env gerekir
-UNPUMP_TEST=1 .venv/bin/python -m pytest tests/ test_x402_servis.py -p no:cacheprovider -q
-# → 13 passed
+# tam suit — tests/ gerçek-dizin, sester conftest tarafından sys.path'e-eklenir
+python3 -m pytest tests/ -q
+# → 861 passed, 0 failed rc=0 ( 2026-10-13 LEED-ölçümü)
 ```
 
-**Dürüst:** kök seviyede **13 test var, hepsi geçer (6 + 7)** — **127 değil**. `tests/test_borsa_core.py`
-(6/6) `borsa_core.py`'nin hermetik testleridir: her test kendi geçici SQLite'ını kullanır, ağ,
-cüzdan, anahtar veya `UNPUMP_TEST` env'i olmadan çalışır. `test_x402_servis.py` (7) uçtan-uca
-ödeme testleridir; `.venv` (Sester ≥0.7) ve import-anı env ister — bunları `conftest.py` sağlar
-(gerçek üretim secret'ı DEĞİL) ve `UNPUMP_TEST=1` gerektirir; yoksa 402/`SystemExit` verir.
+**Yapı:** `tests/` gerçek-bir-dizindir ( self-symlink-DEĞİL). Toplam **861 test**
+tek-komutla doğru toplanır. `conftest.py`, kardeş-proje `sester`'i
+( 63-Sester) `sys.path`'e-ekler; kurulu-değilse ilgili çapraz-testler
+temiz-bir-atlamayla geçer, import-patlamasıyla-DEĞİL.
 
-`24-ajan-borsasi/` ayrı bir **WIP** alt-dizindir (dokunmayın). Bugün bu yol bir
-**kendine işaret eden symlink** ve içi boş (git geçmişinde de hiç dosya yok).
-pytest symlink'i izlediği için aynı kök testlerini onlarca kez topluyor ve tam koşu
-**gerçekte 13 olan yerde `533 passed`** gösteriyor — yani varsayılan komut yanlış
-sayı bildiriyor.
+- `tests/test_borsa_core.py` — saf iş-mantığı; her test kendi geçici SQLite'ını
+  kullanır, ağ/cüzdan/anahtar/`UNPUMP_TEST` olmadan çalışır.
+- `tests/test_x402_servis.py` — uçtan-uca ödeme; `.venv` ( Sester ≥0.7) ve
+  `UNPUMP_TEST=1` ister, yoksa 402/`SystemExit` ( fail-closed-by-design).
+- `tests/test_mainnet_odeme_ve_eslestirme.py` — imza/doğrulama çapraz-testleri
+  ( sester.schemes üzerinden monkeypatch).
 
-- Kök testleri (gerçek kapsam, 13 test): yukarıdaki komutla çalıştırın.
-- WIP alt dizini gerçek içerik kazandığında: symlink yerine **gerçek dizin**
-  kullanılmalı; o zaman tam `pytest` toplamı doğruyu göstermeye devam eder.
-- Sester sanal ortam dışında kurulu değilse `test_x402_servis.py` **atlanır**
-  (287 belirsiz hata yerine 1 atlanan modül) ve sebebi yazılır.
+**Dürüst-sınırlar:**
+- 861 testin tamamı **saf in-memory**; dış-ağ veya zincir- işlem YOK.
+- `UNPUMP_TEST=1` olmadan servis, ödeme-doğrulanmazsa 402 verir — bu
+  üre-tasarımdır, hata-DEĞİL.
+- Test sayısı 0 müşteri/0 canlı-işlem gerçeğini DEĞİŞTİRMEZ: kod-yolları
+  çalışıyor, iş-algısı henüz kanıtlanmadı.
 
 ## Dürüst Durum
 
