@@ -104,7 +104,8 @@ curl -fsS localhost:8000/ozet | python3 -m json.tool
 python3 mainnet_verify.py
 
 # tam test-suiti
-python3 -m pytest tests/ -q    # 861 passed rc=0 ( sester sys.path otomatik)
+python3 -m pytest tests/ -q    # 884 passed rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-14)
+# NOT: pytest tests/ yalnizca tests/ kapsami = 121 passed; 884 = depo-genişi (src/ testleri dahil)
 ```
 
 **Kanal listesi ( hepsi çalışır):**
