@@ -104,8 +104,9 @@ curl -fsS localhost:8000/ozet | python3 -m json.tool
 python3 mainnet_verify.py
 
 # tam test-suiti
-python3 -m pytest tests/ -q    # 884 passed rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-14)
-# NOT: pytest tests/ yalnizca tests/ kapsami = 121 passed; 884 = depo-genişi (src/ testleri dahil)
+python3 -m pytest tests/ -q    # 877 passed rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-16)
+# NOT: 877 = tests/ kapsami; depo-genisi (src/ testleri dahil) = 884 passed rc=0
+#      (eskiden bu satir "tests/ = 121" diyordu — 121 olculemesi yeniden-uretilmedi)
 ```
 
 **Kanal listesi ( hepsi çalışır):**
@@ -113,7 +114,7 @@ python3 -m pytest tests/ -q    # 884 passed rc=0 ( sester sys.path otomatik; LEE
 | Eser | Komut | Durum |
 |---|---|---|
 | Servis | `uvicorn x402_servis:app` | ✅ 31 rota |
-| Test | `python3 -m pytest tests/` | ✅ 861 rc=0 |
+| Test | `python3 -m pytest tests/` | ✅ 877 rc=0 ( LEED 2026-10-16) |
 | Zincir-doğrulama | `python3 mainnet_verify.py` | ✅ PYTHONPATH gerekli |
 | Canlılık | `curl /healthz` | ✅ 200 |
 
@@ -170,11 +171,11 @@ bölümüne bakın.
 ```bash
 # tam suit — tests/ gerçek-dizin, sester conftest tarafından sys.path'e-eklenir
 python3 -m pytest tests/ -q
-# → 861 passed, 0 failed rc=0 ( 2026-10-13 LEED-ölçümü)
+# → 877 passed, 0 failed rc=0 ( 2026-10-16 LEED-ölçümü, 7.47 s)
 ```
 
-**Yapı:** `tests/` gerçek-bir-dizindir ( self-symlink-DEĞİL). Toplam **861 test**
-tek-komutla doğru toplanır. `conftest.py`, kardeş-proje `sester`'i
+**Yapı:** `tests/` gerçek-bir-dizindir ( self-symlink-DEĞİL). Toplam **877 test**
+(`--collect-only` ile 877) tek-komutla doğru toplanır. `conftest.py`, kardeş-proje `sester`'i
 ( 63-Sester) `sys.path`'e-ekler; kurulu-değilse ilgili çapraz-testler
 temiz-bir-atlamayla geçer, import-patlamasıyla-DEĞİL.
 
