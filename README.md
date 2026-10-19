@@ -105,7 +105,7 @@ python3 mainnet_verify.py
 
 # tam test-suiti
 python3 -m pytest tests/ -q    # 877 passed rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-16)
-# NOT: 877 = tests/ kapsami; depo-genisi (src/ testleri dahil) = 884 passed rc=0
+# NOT: 877 = tests/ kapsami; depo-genisi ( kok-test_x402_servis.py .venv+UNPUMP_TEST=1 ile) = 884 passed rc=0
 #      (eskiden bu satir "tests/ = 121" diyordu — 121 olculemesi yeniden-uretilmedi)
 ```
 
@@ -187,7 +187,7 @@ temiz-bir-atlamayla geçer, import-patlamasıyla-DEĞİL.
   ( sester.schemes üzerinden monkeypatch).
 
 **Dürüst-sınırlar:**
-- 861 testin tamamı **saf in-memory**; dış-ağ veya zincir- işlem YOK.
+- 877 testin tamamı **saf in-memory**; dış-ağ veya zincir- işlem YOK ( kok-test_x402_servis.py'nin 7-testi .venv+UNPUMP_TEST=1 ister).
 - `UNPUMP_TEST=1` olmadan servis, ödeme-doğrulanmazsa 402 verir — bu
   üre-tasarımdır, hata-DEĞİL.
 - Test sayısı 0 müşteri/0 canlı-işlem gerçeğini DEĞİŞTİRMEZ: kod-yolları
