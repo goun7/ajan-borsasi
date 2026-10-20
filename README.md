@@ -104,8 +104,8 @@ curl -fsS localhost:8000/ozet | python3 -m json.tool
 python3 mainnet_verify.py
 
 # tam test-suiti
-python3 -m pytest tests/ -q    # 877 passed rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-16)
-# NOT: 877 = tests/ kapsami; depo-genisi ( kok-test_x402_servis.py .venv+UNPUMP_TEST=1 ile) = 884 passed rc=0
+python3 -m pytest tests/ -q    # 878 tests/ kapsami rc=0 ( sester sys.path otomatik; LEED-ölçümü 2026-10-20)
+# NOT: 878 = tests/ kapsami; depo-genisi ( kok-test_x402_servis.py .venv+UNPUMP_TEST=1 ile) = 885 passed rc=0
 #      (eskiden bu satir "tests/ = 121" diyordu — 121 olculemesi yeniden-uretilmedi)
 ```
 
@@ -114,7 +114,7 @@ python3 -m pytest tests/ -q    # 877 passed rc=0 ( sester sys.path otomatik; LEE
 | Eser | Komut | Durum |
 |---|---|---|
 | Servis | `uvicorn x402_servis:app` | ✅ 31 rota |
-| Test | `python3 -m pytest tests/` | ✅ 877 rc=0 ( LEED 2026-10-16) |
+| Test | `python3 -m pytest tests/` | ✅ 878 rc=0 ( LEED 2026-10-20) |
 | Zincir-doğrulama | `python3 mainnet_verify.py` | ✅ PYTHONPATH gerekli |
 | Canlılık | `curl /healthz` | ✅ 200 |
 
@@ -171,7 +171,7 @@ bölümüne bakın.
 ```bash
 # tam suit — tests/ gerçek-dizin, sester conftest tarafından sys.path'e-eklenir
 python3 -m pytest tests/ -q
-# → 877 passed, 0 failed rc=0 ( 2026-10-16 LEED-ölçümü, 7.47 s)
+# → 878 tests/ + 7 root = 885 tests collected, 0 failed rc=0 ( 2026-10-20 LEED-ölçümü)
 ```
 
 **Yapı:** `tests/` gerçek-bir-dizindir ( self-symlink-DEĞİL). Toplam **877 test**
