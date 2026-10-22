@@ -5,20 +5,21 @@ import sys
 from pathlib import Path
 
 import pytest
-from eth_account import Account
-from fastapi.testclient import TestClient
 
-# 2026-09-30: `sester` kardes projedir ve sanal ortamda kuruludur. Sistem
-# Python ile kosuldugunda modul ice aktarilamiyor ve x402_servis.py import
-# sirasinda duser -> 287 test hata veriyor, proje BOZUK gorunuyordu (oysa
-# dogru komutla 13/13 gecer). Burada ATLA: konum bagimsiz cozum, cunku
-# komut satirinda acikca verilen dosyada pytest `collect_ignore` ve
-# `pytest_ignore_collect` kancalarini ATLAR.
+# CI-2026-10-22: `eth_account` ve `sester` kardes-paketleri dogal ortamda
+# kurulu olabilir ama CI'da degil. Oncesi-tasarimda `eth_account` import'u
+# buradan ONCE yapiliyordu -> importorskip asla ulasilamayan bir kuskor
+# oluyordu ( gizli-skip-deseni: korumasi gereken import'u kendisi patlatiyor).
+# Duzeltme: butun kardes-paket importlari importorskip'lerin SONRASINA.
+pytest.importorskip("eth_account")
 pytest.importorskip(
     "sester",
     reason="sester kardes projesi sanal ortamda kurulu; "
            "tam kosu: UNPUMP_TEST=1 .venv/bin/python -m pytest tests/ test_x402_servis.py -q",
 )
+
+from eth_account import Account  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))

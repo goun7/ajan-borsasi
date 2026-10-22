@@ -24,6 +24,11 @@ import pytest
 
 # sester kardes proje; sanal ortamda kurulu degilse bu dosya atlanir
 # (test_x402_servis.py ile ayni koruma kalibi).
+# CI-2026-10-22: eth_account da ayni kaliba alindi. Oncesi-tasarimda bu
+# dosyanin 17 testi _odeme()'nin gomulu import'unda patliyordu (requirements'
+# de olmayinca) -> importorskip'i gecersiz kilan gizli-bagimlilik. Sistemde
+# kurulu degilse dosyanin TAMAMI atlanir, yarim-kalmaz.
+pytest.importorskip("eth_account")
 pytest.importorskip(
     "sester",
     reason="sester kardes projesi sanal ortamda kurulu; "
